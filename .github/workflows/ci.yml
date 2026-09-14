@@ -1,0 +1,39 @@
+name: CPU tests and OpenCL compile
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cpu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87
+        with:
+          toolchain: 1.98.1
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
+      - name: Build the CPU backend
+        run: cargo build --locked --no-default-features
+      - name: Run CPU regression tests
+        run: cargo test --locked --no-default-features
+      - name: Compile-check the OpenCL backend without executing it
+        run: cargo check --locked --no-default-features --features opencl
+      # Backends are mutually exclusive. Never use --all-features.
+      # CUDA needs its toolchain/device; SIMD needs its nightly toolchain.
+      # An OpenCL compile check is not a GPU correctness/performance result.
