@@ -15,6 +15,11 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  # Keep the full million-cell / 4,000-generation test practical in CI.
+  # Optimise the test profile without losing debug assertions or overflow checks.
+  CARGO_PROFILE_TEST_OPT_LEVEL: '2'
+  CARGO_PROFILE_TEST_DEBUG_ASSERTIONS: 'true'
+  CARGO_PROFILE_TEST_OVERFLOW_CHECKS: 'true'
 
 jobs:
   cpu:
